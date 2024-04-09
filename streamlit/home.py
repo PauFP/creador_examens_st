@@ -2,7 +2,7 @@ import streamlit as st
 import os
 import re
 
-subjects_folder = r"D:\xpriments\examens"
+subjects_folder = "examens"
 
 def get_all_subjects():
     return os.listdir(subjects_folder)
