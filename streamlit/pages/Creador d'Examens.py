@@ -101,7 +101,7 @@ def display_exercises_with_solutions(subjects_folder, subject, temas_questions, 
 
             # Muestra el problema y la solución, si existen
             if os.path.exists(problem_path):
-                st.image(problem_path, caption=f"Problema: {problem_id}")
+                st.image(problem_path, caption=f"Problema: {problem_id}, Año: {random_year}, Mes: {random_month}")
             else:
                 st.error(f"No se encontró el archivo del problema: {random_problem}")
 
