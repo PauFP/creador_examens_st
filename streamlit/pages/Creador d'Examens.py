@@ -194,7 +194,6 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
         random_problem = random.choice(problems)
         random_problem_id = None
 
-        print(random_problem)
         if "solution" in random_problem['name']:
             # Cambiar 'solution' por 'problem' en el nombre para encontrar el problema correspondiente
             problem_name = random_problem['name'].replace('solution', 'problem')
@@ -229,17 +228,13 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
         # # Supongamos que las soluciones están nombradas con el prefijo 'solution' en lugar de 'problem'
         # Determinar el nombre de la solución correspondiente cambiando 'problem' por 'solution'
         solution_name = random_problem['name'].replace('problem', 'solution')
-        print(solution_name)
         solution_found = False
 
         # Buscar la solución en la lista de problemas
         for file in problems:
-            print(file)
             if file['name'] == solution_name:
                 solution_url = f"https://drive.google.com/uc?export=view&id={file['id']}"
-                print(solution_url)
                 sol_response = requests.get(solution_url)
-                print(sol_response.headers)
 
                 # Mostrar la solución usando un expander de Streamlit
                 with st.expander("Ver Solución"):
