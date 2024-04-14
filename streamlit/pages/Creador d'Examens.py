@@ -8,7 +8,7 @@ import random
 import json
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
-CREDENTIALS_JSON = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+CREDENTIALS_JSON = st.secrets["GOOGLE_APPLICATION_CREDENTIALS_JSON"]
 
 def authenticate_google_drive(credentials_env=None):
         """
@@ -18,7 +18,7 @@ def authenticate_google_drive(credentials_env=None):
         """
         if credentials_env is None:
             # Cargar las credenciales desde una variable de entorno si no se proporcionan directamente
-            credentials_raw = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+            credentials_raw = st.secrets['GOOGLE_APPLICATION_CREDENTIALS_JSON']
             if credentials_raw:
                 credentials_env = json.loads(credentials_raw)
             else:
