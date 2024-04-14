@@ -178,7 +178,7 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
 
         random_month_id = find_folder_id(service, random_month, random_year_id)
         series = list_folders(service, random_month_id)
-
+        print(series)
         if not series:
             st.error(f"No hay series disponibles para el mes seleccionado: {random_month['name']}.")
             continue
