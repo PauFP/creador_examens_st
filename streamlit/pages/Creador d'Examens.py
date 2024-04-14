@@ -8,7 +8,7 @@ import random
 import json
 
 SCOPES = ['https://www.googleapis.com/auth/drive']
-credentials_json = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
+CREDENTIALS_JSON = os.getenv('GOOGLE_APPLICATION_CREDENTIALS_JSON')
 
 def authenticate_google_drive(credentials_env=None):
         """
@@ -252,8 +252,8 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
             st.warning("No se encontró archivo de solución correspondiente.")
 
 
-if credentials_json:
-    credentials_dict = json.loads(credentials_json)
+if CREDENTIALS_JSON:
+    credentials_dict = json.loads(CREDENTIALS_JSON)
     CREDENTIALS = service_account.Credentials.from_service_account_info(credentials_dict)
 
 st.title("Creador de Exámenes")
