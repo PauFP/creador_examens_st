@@ -1,65 +1,84 @@
-import streamlit as st
 import os
 import re
+from drive_utils import file_management as fm
+import streamlit as st
+import requests
+# subjects_folder = r"D:\xpriments\examens"
 
-subjects_folder = r"D:\xpriments\examens"
+service = fm.authenticate_google_drive()
+examens_folder_id = "14Xh6eAL6b_9VFOaBq62LIKAXDT4SGqMy"
 
-def get_all_subjects():
-    return os.listdir(subjects_folder)
-
+st.title("Creador D'Examens")
 st.header("Home")
-subject = st.selectbox("Subjects", get_all_subjects())
 
-if subject:
+subjects = fm.list_folders(service, examens_folder_id)
+selected_subject = st.selectbox("Selecciona la asignatura", subjects)
+
+# subject = st.selectbox("Subjects", get_all_subjects())
+
+if selected_subject:
     st.subheader("Buscador")
-    type = st.selectbox("Tipo", ["Problemes", "Questions"])
+    subject_id = fm.find_folder_id(service, selected_subject, folder_id="14Xh6eAL6b_9VFOaBq62LIKAXDT4SGqMy")
 
-    if type:
-        tema_path = os.path.join(subjects_folder, subject, type)
-        temas = os.listdir(tema_path)
+    if subject_id:
+        tema = st.multiselect("Temas del ejercicio", fm.list_folders(service, subject_id))
 
-        temas_procesados = []
-        for tema in temas:
-            nombre_procesado = ' '.join(palabra.capitalize() for palabra in tema.split('-'))
-            temas_procesados.append(nombre_procesado)
+        if tema:
+            tema_id = fm.find_folder_id(service, tema, subject_id)
+            if tema_id:
+                available_years = fm.list_folders(service, tema_id)
+                selected_year = st.selectbox("Seleccionar año:", sorted(available_years))
 
-        selected_tema = st.selectbox("Temas", temas_procesados)
+                if selected_year:
+                    selected_year_id = fm.find_folder_id(service, selected_year, tema_id)
 
-        if selected_tema:
-            selected_tema_processed = '-'.join(palabra.lower() for palabra in selected_tema.split(' '))
-            year_path = os.path.join(tema_path, selected_tema_processed)
+                    if selected_year_id:
+                        selected_month = st.selectbox("Seleccionar mes:",
+                                                      sorted(fm.list_folders(service, selected_year_id)))
 
-            if os.path.exists(year_path):
-                year = st.selectbox("Año", sorted(os.listdir(year_path)))
+                        if selected_month:
+                            selected_month_id = fm.find_folder_id(service, selected_month, selected_year_id)
 
-                if year:
-                    mes_path = os.path.join(year_path, year)
-                    mes = st.selectbox("Mes", sorted(os.listdir(mes_path)))
+                            if selected_month_id:
+                                selected_serie = st.selectbox("Seleccionar serie:",
+                                                              sorted(fm.list_folders(service, selected_month_id)))
 
-                    if mes:
-                        serie_path = os.path.join(mes_path, mes.lower())
-                        serie = st.selectbox("Serie (Opcional)", sorted(os.listdir(serie_path)))
+                                if selected_serie:
+                                    selected_serie_id = fm.find_folder_id(service, selected_serie, selected_month_id)
 
-                        if serie:
-                            final_path = os.path.join(serie_path, serie)
-                            files = os.listdir(final_path)
+                                    if selected_serie_id:
+                                        images = fm.list_files(service, selected_serie_id)
 
-                            # Crear un diccionario para emparejar problemas y soluciones basado en el ID.
-                            matched_files = {}
-                            for file in files:
-                                match = re.search(r'(problem|solution)_(\d+)', file)
-                                if match:
-                                    file_type, file_id = match.groups()
-                                    if file_id not in matched_files:
-                                        matched_files[file_id] = {'problem': None, 'solution': None}
-                                    matched_files[file_id][file_type] = file
+                                        for image in images:
+                                            image_id = image["id"]
+                                            problem_url = f"https://drive.google.com/uc?export=view&id={image_id}"
+                                            response = requests.get(problem_url)
+                                            if response.status_code == 200:
+                                                try:
+                                                    st.image(response.content,
+                                                             caption=f"Año: {selected_year}, Mes: {selected_month}, Serie: {selected_serie}")
+                                                except Exception as e:
+                                                    print("Error al cargar la imagen:", e)
+                                                    st.error(
+                                                        "No se pudo cargar la imagen. Verifique los permisos del archivo y el ID.")
+                                            else:
+                                                print(
+                                                    f"Fallo en la carga de la imagen, código de estado HTTP: {response.status_code}")
+                                                st.error(
+                                                    f"Error al cargar la imagen desde Google Drive. Código de estado: {response.status_code}")
 
-                            # Mostrar en pares: problema seguido de solución
-                            for file_id in matched_files:
-                                with st.container(border=True):
-                                    pair = matched_files[file_id]
-                                    if pair['problem']:
-                                        st.image(os.path.join(final_path, pair['problem']), caption=pair['problem'])
-                                    with st.expander("Solución"):
-                                        if pair['solution']:
-                                            st.image(os.path.join(final_path, pair['solution']), caption=pair['solution'])
+                                            solution_name = image['name'].replace('problem', 'solution')
+                                            solution_found = False
+
+                                            for file in images:
+                                                if file['name'] == solution_name:
+                                                    solution_url = f"https://drive.google.com/uc?export=view&id={file['id']}"
+                                                    sol_response = requests.get(solution_url)
+                                                    with st.expander("Ver Solución"):
+                                                        st.image(sol_response.content,
+                                                                 caption=f"Solución: {solution_name}")
+                                                    solution_found = True
+                                                    break
+
+                                            if not solution_found:
+                                                st.warning("No se encontró archivo de solución correspondiente.")
