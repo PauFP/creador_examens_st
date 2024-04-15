@@ -1,9 +1,7 @@
-import os
-import re
+
 from drive_utils import file_management as fm
 import streamlit as st
 import requests
-# subjects_folder = r"D:\xpriments\examens"
 
 service = fm.authenticate_google_drive()
 examens_folder_id = "14Xh6eAL6b_9VFOaBq62LIKAXDT4SGqMy"
