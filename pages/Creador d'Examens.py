@@ -69,7 +69,6 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
                 # Intentar mostrar la imagen si la respuesta es exitosa
                 st.image(response.content,
                          caption=f"Año: {random_year}, Mes: {random_month}, Serie: {random_serie}")  # Elimina el doble llamado a st.image
-                print("Imagen cargada correctamente.")
 
             except Exception as e:
 
