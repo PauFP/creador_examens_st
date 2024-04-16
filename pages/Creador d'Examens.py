@@ -3,7 +3,7 @@ from google.oauth2 import service_account
 import requests
 import random
 import json
-from scripts.project.drive_utils import file_management as fm
+from drive_utils import file_management as fm
 
 
 # subjects_folder, subject
