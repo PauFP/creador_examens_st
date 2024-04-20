@@ -3,12 +3,13 @@ from google.oauth2 import service_account
 import requests
 import random
 import json
-from scripts.project.drive_utils import file_management as fm
-
-
+from drive_utils import file_management as fm
+from collections import Counter
 # subjects_folder, subject
-def display_exercises_with_solutions(service, temas_problemas, subject_folder_id):
+def display_problems_and_solutions(service, temas_problemas, subject_folder_id, filtered_years):
     st.header("Ejercicios y Soluciones")
+    all_problems_info = []  # Lista para almacenar la información de todos los problemas
+
     if not temas_problemas:
         st.warning("No se han seleccionado temas para ejercicios o problemas.")
         return
@@ -20,11 +21,21 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
             st.error(f"No se encontró el directorio para el tema {tema}.")
             continue
 
-        years = fm.list_folders(service, temas_id)
+        if "Todos" in filtered_years or not filtered_years:
+            years = fm.list_folders(service, temas_id)
+            if years:
+                random_year = random.choice(years)
+            else:
+                random_year = None
+        else:
+            years = filtered_years
+            random_filtered_year = random.choice(filtered_years)
+            random_year = random_filtered_year
+
         if not years:
             st.error(f"No hay años disponibles para el tema {tema}.")
             continue
-        random_year = random.choice(years)
+
         random_year_id = fm.find_folder_id(service, random_year, temas_id)
         months = fm.list_folders(service, random_year_id)
         if not months:
@@ -45,7 +56,7 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
         if not problems:
             st.error(f"No hay problemas disponibles en la serie seleccionada: {random_serie['name']}.")
             continue
-
+        random_problem_id_list = []
         random_problem = random.choice(problems)
         random_problem_id = None
 
@@ -61,6 +72,21 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
         else:
             random_problem_id = random_problem['id']
 
+        random_problem_id_list.append(random_problem_id)
+        problem_info = {
+            "prob_id": random_problem_id,
+            "year_id": random_year_id,
+            "month_id": random_month_id,
+            "serie_id": random_serie_id,
+            "tema_id": tema_folder_id,
+            "name": random_problem['name']
+        }
+
+        all_problems_info.append(problem_info)  # Agregar info del problema a la lista
+
+
+
+
         problem_url = f"https://drive.google.com/uc?export=view&id={random_problem_id}"
         response = requests.get(problem_url)
 
@@ -69,7 +95,7 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
                 # Intentar mostrar la imagen si la respuesta es exitosa
                 st.image(response.content,
                          caption=f"Año: {random_year}, Mes: {random_month}, Serie: {random_serie}")  # Elimina el doble llamado a st.image
-                print("Imagen cargada correctamente.")
+                # print("Imagen cargada correctamente.")
 
             except Exception as e:
 
@@ -103,6 +129,7 @@ def display_exercises_with_solutions(service, temas_problemas, subject_folder_id
             st.warning("No se encontró archivo de solución correspondiente.")
 
 
+
 if fm.CREDENTIALS_JSON:
     credentials_dict = json.loads(fm.CREDENTIALS_JSON)
     CREDENTIALS = service_account.Credentials.from_service_account_info(credentials_dict)
@@ -126,6 +153,14 @@ if selected_subject:
 
     problems_count = st.number_input("Cantidad de problemas por tema", min_value=0, value=5)
     problemas_temas = st.multiselect("Temas de los problemas", temas_list)
+    filtered_year = []
+    if problemas_temas:
+        temas_id = fm.find_folder_id(service, problemas_temas[0], tema_folder_id)
+
+        years = fm.list_folders(service, temas_id)
+
+        filtered_year = st.multiselect("Filtrar por años: ", ["Todos"]+sorted(years))
+        # filtered_years.append(filtered_year)
 
     distribucion_p_temas = []
     with st.expander("Temas Problemas"):
@@ -134,4 +169,4 @@ if selected_subject:
             distribucion_p_temas.append(tema)
     # Ejemplo de cómo llamar a la función
     if st.button("Mostrar Ejercicios y Soluciones"):
-        display_exercises_with_solutions(service, distribucion_p_temas, tema_folder_id)
+        display_problems_and_solutions(service, distribucion_p_temas, tema_folder_id, filtered_year)
