@@ -19,10 +19,12 @@ if selected_subject:
     subject_id = fm.find_folder_id(service, selected_subject, folder_id="14Xh6eAL6b_9VFOaBq62LIKAXDT4SGqMy")
 
     if subject_id:
-        tema = st.multiselect("Temas del ejercicio", fm.list_folders(service, subject_id))
+        tema = st.selectbox("Temas del ejercicio", fm.list_folders(service, subject_id))
 
         if tema:
             tema_id = fm.find_folder_id(service, tema, subject_id)
+
+            # print(service, tema, subject_id)
             if tema_id:
                 available_years = fm.list_folders(service, tema_id)
                 selected_year = st.selectbox("Seleccionar año:", sorted(available_years))
