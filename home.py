@@ -50,35 +50,44 @@ if selected_subject:
                                         images = fm.list_files(service, selected_serie_id)
 
                                         for image in images:
-                                            image_id = image["id"]
-                                            problem_url = f"https://drive.google.com/uc?export=view&id={image_id}"
-                                            response = requests.get(problem_url)
-                                            if response.status_code == 200:
-                                                try:
-                                                    st.image(response.content,
-                                                             caption=f"Año: {selected_year}, Mes: {selected_month}, Serie: {selected_serie}")
-                                                except Exception as e:
-                                                    print("Error al cargar la imagen:", e)
+                                            if "problem" in image['name']:
+                                                problem_id = image['id']
+                                                problem_url = f"https://drive.google.com/uc?export=view&id={problem_id}"
+                                                response = requests.get(problem_url)
+
+                                                if response.status_code == 200:
+                                                    try:
+                                                        st.image(response.content, caption=image['name'])
+                                                    except Exception as e:
+                                                        print("Error al cargar la imagen:", e)
+                                                        st.error(
+                                                            "No se pudo cargar la imagen. Verifique los permisos del archivo y el ID.")
+                                                else:
+                                                    print(
+                                                        f"Fallo en la carga de la imagen, código de estado HTTP: {response.status_code}")
                                                     st.error(
-                                                        "No se pudo cargar la imagen. Verifique los permisos del archivo y el ID.")
-                                            else:
-                                                print(
-                                                    f"Fallo en la carga de la imagen, código de estado HTTP: {response.status_code}")
-                                                st.error(
-                                                    f"Error al cargar la imagen desde Google Drive. Código de estado: {response.status_code}")
+                                                        f"Error al cargar la imagen desde Google Drive. Código de estado: {response.status_code}")
 
-                                            solution_name = image['name'].replace('problem', 'solution')
-                                            solution_found = False
+                                                # Buscar la solución correspondiente
+                                                solution_name = image['name'].replace('problem', 'solution')
+                                                solution_found = False
 
-                                            for file in images:
-                                                if file['name'] == solution_name:
-                                                    solution_url = f"https://drive.google.com/uc?export=view&id={file['id']}"
-                                                    sol_response = requests.get(solution_url)
-                                                    with st.expander("Ver Solución"):
-                                                        st.image(sol_response.content,
-                                                                 caption=f"Solución: {solution_name}")
-                                                    solution_found = True
-                                                    break
+                                                for file in images:
+                                                    if file['name'] == solution_name:
+                                                        solution_url = f"https://drive.google.com/uc?export=view&id={file['id']}"
+                                                        sol_response = requests.get(solution_url)
 
-                                            if not solution_found:
-                                                st.warning("No se encontró archivo de solución correspondiente.")
+                                                        if sol_response.status_code == 200:
+                                                            with st.expander("Ver Solución"):
+                                                                st.image(sol_response.content,
+                                                                         caption=f"Solución: {solution_name}")
+                                                            solution_found = True
+                                                            break
+                                                        else:
+                                                            print(
+                                                                f"Error al cargar la imagen de solución con ID {file['id']}, código de estado HTTP: {sol_response.status_code}")
+
+                                                if not solution_found:
+                                                    st.warning(
+                                                        "No se encontró archivo de solución correspondiente para: " +
+                                                        image['name'])
