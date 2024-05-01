@@ -144,7 +144,13 @@ subjects = fm.list_folders(service, examens_folder_id)
 selected_subject = st.selectbox("Selecciona la asignatura", subjects)
 if selected_subject:
     tema_folder_id = fm.find_folder_id(service, selected_subject, folder_id="14Xh6eAL6b_9VFOaBq62LIKAXDT4SGqMy")
+    if selected_subject == "Tecnologia":
 
+        tipo = st.selectbox("Tipo", ["Problemes", "Questions"])
+        if tipo == "Problemes":
+            tema_folder_id = "1q99OL4r6HkcPPoirDm2ipa4B7Gz_zm6q"
+        else:
+            tema_folder_id = "1AN9VXrQpOywlL3VjRKKmD5YiUkValeOl"
     temas_list = fm.list_folders(service, tema_folder_id)
 
     q1, q2 = st.columns(2)
