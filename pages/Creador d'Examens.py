@@ -25,11 +25,15 @@ class PDF(FPDF):
         self.set_font('Arial', 'I', 8)
         self.cell(0, 10, 'Page %s' % self.page_no(), 0, 0, 'C')
 
-    def add_image(self, image_path, title):
+    def add_image(self, image_bytes, title):
         self.add_page()
         self.set_font('Arial', 'B', 12)
         self.cell(0, 10, title, 0, 1, 'L')
-        self.image(image_path, x=10, y=30, w=180)
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmpfile:
+            tmpfile.write(image_bytes)
+            tmpfile_path = tmpfile.name
+        self.image(tmpfile_path, x=10, y=30, w=180)
+        os.unlink(tmpfile_path)  # Eliminar la imagen temporal después de agregarla al PDF
 
 def generate_pdf(problems_info, subject_title):
     pdf = PDF(subject_title)
@@ -42,11 +46,10 @@ def generate_pdf(problems_info, subject_title):
         if response.status_code == 200:
             try:
                 image = Image.open(BytesIO(response.content))
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmpfile:
-                    image.save(tmpfile, format='JPEG')
-                    tmpfile_path = tmpfile.name
-                    pdf.add_image(tmpfile_path, problem_title)
-                    os.unlink(tmpfile_path)  # Eliminar la imagen temporal después de agregarla al PDF
+                image_stream = BytesIO()
+                image.save(image_stream, format='JPEG')
+                image_stream.seek(0)
+                pdf.add_image(image_stream.read(), problem_title)
             except Exception as e:
                 print("Error al procesar la imagen del problema:", e)
         else:
@@ -59,11 +62,10 @@ def generate_pdf(problems_info, subject_title):
         if response.status_code == 200:
             try:
                 image = Image.open(BytesIO(response.content))
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmpfile:
-                    image.save(tmpfile, format='JPEG')
-                    tmpfile_path = tmpfile.name
-                    pdf.add_image(tmpfile_path, solution_title)
-                    os.unlink(tmpfile_path)  # Eliminar la imagen temporal después de agregarla al PDF
+                image_stream = BytesIO()
+                image.save(image_stream, format='JPEG')
+                image_stream.seek(0)
+                pdf.add_image(image_stream.read(), solution_title)
             except Exception as e:
                 print("Error al procesar la imagen de la solución:", e)
         else:
