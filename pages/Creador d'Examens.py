@@ -237,6 +237,6 @@ if selected_subject:
                 st.download_button(
                     label="Descargar Examen en PDF",
                     data=pdf_file,
-                    file_name="examen.pdf",
+                    file_name=f"examen_{selected_subject}.pdf",
                     mime="application/pdf"
                 )
